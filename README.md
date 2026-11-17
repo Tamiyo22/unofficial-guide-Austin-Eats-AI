@@ -2,22 +2,10 @@
 
 Melissa Hargis - city_guides
 
-> **This file is your submission.** Fill it in as you go — most sections get
-> written during the milestone that produces them, not at the end.
->
-> How the starter works, and every command you'll need, is in `RUNNING.md`.
-> Leave that file alone.
->
-> **Paste everything as text.** No screenshots, no video. A typed table gets
-> full credit; a picture of the same table gets none.
->
-> Delete these instruction blocks as you replace them. The `<!-- -->` comments
-> are notes to you and don't show up when the page renders — you can leave them
-> or remove them.
 
 ---
 
-# Unit 1
+
 
 ## What This Does
 
@@ -261,15 +249,7 @@ I also asked ChatGPT for help designing a chunking strategy for the structured c
 
 ## Run Log — Before
 
-<!-- Your five criteria, three runs each. `python run_eval.py --label before`
-     runs the questions, puts the OUT_OF_SCOPE ones through the gate, and
-     writes it all into results/ for you. Targets come from criteria.md; the
-     verdict column is your call.
 
-     Criterion 3 is measured in one deterministic pass rather than three, so
-     the same number goes in all three run columns. That's correct, not lazy.
-
-     Milestone 1. -->
 
 | Criterion                                  | Target | Run 1 | Run 2 | Run 3 | Verdict |
 | ------------------------------------------ | ------ | ----- | ----- | ----- | ------- |
@@ -528,3 +508,16 @@ None of the original evaluation criteria are currently failing. However, the eva
 ## What I'd Do Differently
 
 I would write the criterion about answer correctness differently. Initially, I treated a question as correct only if the expected phrase appeared in the generated answer. During testing, I found that a correct answer could still be marked as incorrect because of wording differences rather than an actual retrieval or reasoning problem. If I rewrote the criterion, I would focus on whether the answer communicates the correct information and cites the appropriate source rather than requiring a specific phrase. This would better measure the quality of the RAG system and reduce false failures caused by evaluation wording.
+
+
+## Capstone
+
+**What This Extends**
+
+This capstone extends my existing Unofficial Guide RAG application with restaurant recommendations for Austin, Texas. The new capability will allow users to ask questions about restaurants based on location, cuisine, and budget, using retrieved restaurant information to ground Gemini's responses.
+
+**The Shape**
+
+I selected Shape C: Extend One Capability. I am adding an Austin restaurant recommendation corpus while preserving the existing RAG pipeline.
+
+Out of scope for this submission are live restaurant APIs, real-time prices, reservations, maps, and recommendations outside Austin.

@@ -27,6 +27,10 @@ BLURBS = {
         "Not for your project — the small corpus used for the in-class "
         "follow-along."
     ),
+    "austin_restaurants": (
+        "Austin restaurant recommendations organized by "
+        "neighborhood, cuisine, and estimated price range."
+    ),
 }
 
 
