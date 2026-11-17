@@ -1,11 +1,12 @@
-# The Unofficial Guide
+# Unofficial Guide: Austin Eats AI
+
+Originally developed as a CodePath AI Engineering RAG project, Unofficial Guide has been extended with Austin Eats AI, a restaurant recommendation assistant that uses retrieval-augmented generation and Google Gemini.
 
 Melissa Hargis - city_guides
 
-
 ---
 
-
+# Unit 1
 
 ## What This Does
 
@@ -246,10 +247,7 @@ I also asked ChatGPT for help designing a chunking strategy for the structured c
 
 # Unit 2
 
-
 ## Run Log — Before
-
-
 
 | Criterion                                  | Target | Run 1 | Run 2 | Run 3 | Verdict |
 | ------------------------------------------ | ------ | ----- | ----- | ----- | ------- |
@@ -354,17 +352,13 @@ refused (best distance 0.836) How do I write a for loop in Rust?
 
 ## Verdicts
 
-
-
-| # | Criterion | Verdict | How I decided |
-| --- | ---                                | --- | ---                                                                                              |
-| 1. | Retrieved chunk contains the answer | MET | Four out of five answers included the expected keywords. For the question "Does Brightwater’s local bus operate on Sundays?", the response was: "No, the local bus stops entirely on Sundays. Source: guide_brightwater.md". The initial evaluation expectation was that the response would include the words "minimal to non-existent". However, after reviewing the corpus, I realized my evaluation criterion itself was flawed, not the model's output. Therefore, I updated the final verdict to MET instead of MISSED. |
-| 2. | Every answer names a source | MET | All five answers include a source, even the question that did not entirely meet answer expectations included rescources to validate its response. |
-| 3. | Gate stops out-of-corpus questions | MET | Five out of five out-of-corpus questions successfully triggered the expected refusal response. Additional exploratory testing yielded the same consistent results. |
-| 4. | Exclude text from an unrelated sections | MET | All five responses remained strictly within the scope of the queried topic without pulling in irrelevant information. |
-| 5 .| Agent doesn't crash | MET | The agent remained stable across multiple tests and query variations. Response times and performance were consistently stable. |
-
-
+| #   | Criterion                               | Verdict | How I decided                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --- | --------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.  | Retrieved chunk contains the answer     | MET     | Four out of five answers included the expected keywords. For the question "Does Brightwater’s local bus operate on Sundays?", the response was: "No, the local bus stops entirely on Sundays. Source: guide_brightwater.md". The initial evaluation expectation was that the response would include the words "minimal to non-existent". However, after reviewing the corpus, I realized my evaluation criterion itself was flawed, not the model's output. Therefore, I updated the final verdict to MET instead of MISSED. |
+| 2.  | Every answer names a source             | MET     | All five answers include a source, even the question that did not entirely meet answer expectations included rescources to validate its response.                                                                                                                                                                                                                                                                                                                                                                            |
+| 3.  | Gate stops out-of-corpus questions      | MET     | Five out of five out-of-corpus questions successfully triggered the expected refusal response. Additional exploratory testing yielded the same consistent results.                                                                                                                                                                                                                                                                                                                                                           |
+| 4.  | Exclude text from an unrelated sections | MET     | All five responses remained strictly within the scope of the queried topic without pulling in irrelevant information.                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 5 . | Agent doesn't crash                     | MET     | The agent remained stable across multiple tests and query variations. Response times and performance were consistently stable.                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## Diagnoses
 
@@ -372,11 +366,7 @@ Every criterion was successfully met. Upon further reflection, I realized that I
 The only discrepancy encountered during testing involved the question, "Does Brightwater’s local bus operate on Sundays?" After reviewing the underlying corpus documents, I concluded that my predefined evaluation criterion was broken rather than the system failing.
 To improve future validation passes, I will implement a more thorough testing strategy by increasing both the volume and complexity of the evaluation dataset. Specifically, I plan to introduce edge cases, such as intentional misspellings and special symbols, to better uncover potential vulnerabilities.
 
-
-
 ## The Improvement
-
-    
 
 **What I changed:**
 
@@ -384,11 +374,11 @@ To improve future validation passes, I will implement a more thorough testing st
         "expects": "stops entirely on Sundays",
 
         Changed from minimal to non-existent to stops entirely on Sundays
-        
+
 
 **Why I picked it:**
 
- During testing, a discrepancy was identified regarding the local transit verification dataset. For the test assertion checking if Brightwater's local bus operates on Sundays, the expected target string was updated from "minimal to non-existent" to "stops entirely on Sundays". This adjustment corrects a flawed test metric, ensuring the evaluation criteria accurately reflects the true facts stated within the guide_brightwater.md source document.
+During testing, a discrepancy was identified regarding the local transit verification dataset. For the test assertion checking if Brightwater's local bus operates on Sundays, the expected target string was updated from "minimal to non-existent" to "stops entirely on Sundays". This adjustment corrects a flawed test metric, ensuring the evaluation criteria accurately reflects the true facts stated within the guide_brightwater.md source document.
 
 ### Run Log — After
 
@@ -400,101 +390,101 @@ To improve future validation passes, I will implement a more thorough testing st
 QUESTION: How frequently do Marchwood’s trams run on weekdays?
 EXPECTS: '8 minutes'
 ANSWER : "Marchwood's trams run every 8 minutes on weekdays (from `guide_marchwood.md`)."
-  run 1: pass  (best distance 0.238)
+run 1: pass (best distance 0.238)
 
 QUESTION: How frequently do Marchwood’s trams run on weekdays?
 EXPECTS: '8 minutes'
 ANSWER : "Marchwood's trams run every 8 minutes on weekdays (guide_marchwood.md)."
-  run 2: pass  (best distance 0.238)
+run 2: pass (best distance 0.238)
 
 QUESTION: How frequently do Marchwood’s trams run on weekdays?
 EXPECTS: '8 minutes'
 ANSWER : "Marchwood's trams run every 8 minutes on weekdays (from `guide_marchwood.md`)."
-  run 3: pass  (best distance 0.238)
+run 3: pass (best distance 0.238)
 
 What is the easiest town for travelers with limited mobility?
 
 QUESTION: What is the easiest town for travelers with limited mobility?
 EXPECTS: 'Thornby Wells'
 ANSWER : 'Based on `guide_accessibility.md`, the easiest town in the region for travelers with limited mobility is Thornby Wells.'
-  run 1: pass  (best distance 0.513)
+run 1: pass (best distance 0.513)
 
 QUESTION: What is the easiest town for travelers with limited mobility?
 EXPECTS: 'Thornby Wells'
 ANSWER : 'The easiest town for travelers with limited mobility is Thornby Wells (source: `guide_accessibility.md`).'
-  run 2: pass  (best distance 0.513)
+run 2: pass (best distance 0.513)
 
 QUESTION: What is the easiest town for travelers with limited mobility?
 EXPECTS: 'Thornby Wells'
 ANSWER : 'The easiest town for travelers with limited mobility is Thornby Wells (source: `guide_accessibility.md`).'
-  run 3: pass  (best distance 0.513)
+run 3: pass (best distance 0.513)
 
 Where can visitors find less expensive food in Halden Bay?
 
 QUESTION: Where can visitors find less expensive food in Halden Bay?
 EXPECTS: 'Fell Street'
 ANSWER : 'Visitors can find less expensive food on Fell Street, which is one level up from the harbour front (guide_halden_bay.md and guide_eating.md).'
-  run 1: pass  (best distance 0.333)
+run 1: pass (best distance 0.333)
 
 QUESTION: Where can visitors find less expensive food in Halden Bay?
 EXPECTS: 'Fell Street'
-ANSWER : 'Visitors can find less expensive food on Fell Street, one level up from the harbour front (*guide_halden_bay.md* and *guide_eating.md*).'
-  run 2: pass  (best distance 0.333)
+ANSWER : 'Visitors can find less expensive food on Fell Street, one level up from the harbour front (_guide_halden_bay.md_ and _guide_eating.md_).'
+run 2: pass (best distance 0.333)
 
 QUESTION: Where can visitors find less expensive food in Halden Bay?
 EXPECTS: 'Fell Street'
-ANSWER : 'Visitors can find less expensive food on Fell Street, one level up from the harbour front (*guide_halden_bay.md* and *guide_eating.md*).'
-  run 3: pass  (best distance 0.333)
+ANSWER : 'Visitors can find less expensive food on Fell Street, one level up from the harbour front (_guide_halden_bay.md_ and _guide_eating.md_).'
+run 3: pass (best distance 0.333)
 
 What time does Kestrelford’s bakery usually sell out?
 
 QUESTION: What time does Kestrelford’s bakery usually sell out?
 EXPECTS: '11am'
 ANSWER : "Kestrelford's bakery usually sells out by 11am. \n\nSources: `guide_kestrelford.md` and `guide_eating.md`."
-  run 1: pass  (best distance 0.335)
+run 1: pass (best distance 0.335)
 
 QUESTION: What time does Kestrelford’s bakery usually sell out?
 EXPECTS: '11am'
 ANSWER : "Kestrelford's bakery usually sells out by 11am. \n\nSources: `guide_kestrelford.md` and `guide_eating.md`."
-  run 2: pass  (best distance 0.335)
+run 2: pass (best distance 0.335)
 
 QUESTION: What time does Kestrelford’s bakery usually sell out?
 EXPECTS: '11am'
 ANSWER : "Kestrelford's bakery usually sells out by 11am. \n\nSources: `guide_kestrelford.md` and `guide_eating.md`"
-  run 3: pass  (best distance 0.335)
+run 3: pass (best distance 0.335)
 
 Does Brightwater’s local bus operate on Sundays?
 
 QUESTION: Does Brightwater’s local bus operate on Sundays?
 EXPECTS: 'stops entirely on Sundays'
 ANSWER : 'No, the local bus stops entirely on Sundays. \n\nSource: guide_brightwater.md'
-  run 1: pass  (best distance 0.289)
+run 1: pass (best distance 0.289)
 
 QUESTION: Does Brightwater’s local bus operate on Sundays?
 EXPECTS: 'stops entirely on Sundays'
 ANSWER : "No, Brightwater's local bus stops entirely on Sundays. \n\nSource: `guide_brightwater.md`"
-  run 2: pass  (best distance 0.289)
+run 2: pass (best distance 0.289)
 
 QUESTION: Does Brightwater’s local bus operate on Sundays?
 EXPECTS: 'stops entirely on Sundays'
 ANSWER : 'No, the local bus stops entirely on Sundays. \n\nSource: guide_brightwater.md'
-  run 3: pass  (best distance 0.289)
+run 3: pass (best distance 0.289)
 
 Out-of-scope questions (the gate should refuse these):
-  refused  (best distance 0.846)  What is the capital of Mongolia?
-  refused  (best distance 0.903)  How do I change the oil in a diesel engine?
-  refused  (best distance 0.997)  Who won the 1994 World Cup?
-  refused  (best distance 0.835)  What is the recommended dosage of ibuprofen for a headache?
-  refused  (best distance 0.836)  How do I write a for loop in Rust?
-  -> gate refused 5 of 5
+refused (best distance 0.846) What is the capital of Mongolia?
+refused (best distance 0.903) How do I change the oil in a diesel engine?
+refused (best distance 0.997) Who won the 1994 World Cup?
+refused (best distance 0.835) What is the recommended dosage of ibuprofen for a headache?
+refused (best distance 0.836) How do I write a for loop in Rust?
+-> gate refused 5 of 5
 
 | Criterion                                  | Target | Run 1 | Run 2 | Run 3 | Verdict |
-| --------------------------------------     | ------ | ----- | ----- | ----- | ------- |
-| 1. Retrieved chunk contains the answer     | 5 of 5 |  5/5  |  5/5  |  5/5  |   MET   |
-| 2. Every answer names a source             | 5 of 5 |  5/5  |  5/5  |  5/5  |   MET   |
-| 3. Gate stops out-of-corpus questions      | 5 of 5 |  5/5  |  5/5  |  5/5  |   MET   |
-| 4. Exclude text from an unrelated sections | 5 of 5 |  5/5  |  5/5  |  5/5  |   MET   |
-| 5. Agent doesn't crash                     | 5 of 5 |  5/5  |  5/5  |  5/5  |   MET   |
+| ------------------------------------------ | ------ | ----- | ----- | ----- | ------- |
+| 1. Retrieved chunk contains the answer     | 5 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 2. Every answer names a source             | 5 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 3. Gate stops out-of-corpus questions      | 5 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 4. Exclude text from an unrelated sections | 5 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 5. Agent doesn't crash                     | 5 of 5 | 5/5   | 5/5   | 5/5   | MET     |
 
 **Did it help?**
 
@@ -504,11 +494,9 @@ Yes. The change helped because it fixed the only criterion that was failing duri
 
 None of the original evaluation criteria are currently failing. However, the evaluation still relies on exact string matching in some places, which could make it sensitive to wording differences even when an answer is factually correct. If I continued improving the project, I would make the evaluation more robust by checking for semantic correctness rather than exact phrases. I stopped here because the project now meets the required criteria and the remaining improvements are enhancements rather than fixes for failing tests.
 
-
 ## What I'd Do Differently
 
 I would write the criterion about answer correctness differently. Initially, I treated a question as correct only if the expected phrase appeared in the generated answer. During testing, I found that a correct answer could still be marked as incorrect because of wording differences rather than an actual retrieval or reasoning problem. If I rewrote the criterion, I would focus on whether the answer communicates the correct information and cites the appropriate source rather than requiring a specific phrase. This would better measure the quality of the RAG system and reduce false failures caused by evaluation wording.
-
 
 ## Capstone
 
