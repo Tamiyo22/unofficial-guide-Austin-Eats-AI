@@ -671,7 +671,7 @@ _The original South Congress answer omitted one restaurant but did not recommend
 - `results/run_2026-11-17_1913_retrieval_test.md`
 - `results/run_2026-11-17_1923_compatibility_after.md`
 
-### The Improvement
+## The Improvement
 
 #### What Changed and Why
 
@@ -705,7 +705,7 @@ The trade-off was higher token usage: approximately **2.55 times** the original 
 
 The original evaluation scorer also had an overly strict exact-string comparison that incorrectly marked otherwise correct answers as failures. I investigated those results manually and improved the scorer rather than treating its initial failure counts as evidence that every answer was incorrect.
 
-#### Additional Usability Improvement: Restaurant Website Links
+## Additional Usability Improvement: Restaurant Website Links
 
 After improving retrieval, I added restaurant website links to the generated recommendations.
 
@@ -717,11 +717,11 @@ I also changed the response wording from "Based on the provided documents" to "A
 
 A separate ten-request instrumentation run tested seven distinct restaurant questions and three unrelated questions. All seven restaurant responses included website links, all three unrelated questions were refused, and no application errors were recorded.
 
-#### Remaining Trade-Off
+## Remaining Trade-Off
 
 Increasing retrieval depth improved coverage but also increased the amount of context sent to Gemini. The next improvement would be neighborhood-aware retrieval filtering, allowing the system to retrieve fewer, more targeted chunks while preserving recommendation accuracy.
 
-### What's Still Broken
+## What's Still Broken
 
 Although Austin Eats AI passed all 21 trials in the final restaurant evaluation, the system still has limitations.
 
@@ -733,16 +733,16 @@ If I revised my acceptance criteria, I would strengthen Criterion 3 by requiring
 
 I stopped further development because the project met its current evaluation targets, and implementing more sophisticated retrieval and claim validation would require additional development and testing.
 
-### What I'd Do Next
+## What I'd Do Next
 
 If I had another unit to continue developing Austin Eats AI, I would prioritize neighborhood-aware retrieval that filters restaurant documents by the user's requested location before sending them to Gemini. This could maintain the recommendation accuracy achieved with `top_k=15` while reducing irrelevant context, token consumption, and operating costs.
 
-### How I Used AI
+## How I Used AI
 
-# One
+### One
 
 One of the most valuable uses of AI was troubleshooting the evaluation pipeline. When my initial tests reported that every restaurant recommendation had failed, I worked with ChatGPT to investigate the discrepancy between the automated verdicts and the actual generated answers. We identified that the original scorer relied on overly restrictive string matching rather than validating restaurant recommendations against the dataset. I used AI assistance to develop a more appropriate scoring approach, tested the revised functions, and verified the results against saved evaluation logs.
 
-# Two
+### Two
 
 I also used ChatGPT to investigate retrieval quality. By comparing the original evaluation results with the restaurant dataset, I identified incomplete South Congress recommendations and missing Downtown results. I tested an increase in retrieval depth from five to fifteen chunks and observed an improvement from 15 of 21 manually verified successful trials to 21 of 21 automated passes. I also examined the associated increase in token usage to understand the trade-off between retrieval coverage and operating cost.
