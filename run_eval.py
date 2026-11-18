@@ -39,6 +39,8 @@ from pathlib import Path
 
 import config
 import questions as qs
+import austin_questions
+import time
 
 
 def load_scorer():
@@ -65,6 +67,8 @@ def run_once(question: str, top_k, threshold, corpus, variant):
 
     # cache=False on purpose. Three runs have to be three real answers.
     answer = answer_from_chunks(question, results, cache=False)
+
+    time.sleep(5)
     return answer, results, decision
 
 
@@ -84,6 +88,10 @@ def main():
     corpus = args.corpus or config.CORPUS
     top_k = args.top_k or config.TOP_K
     threshold = config.THRESHOLD if args.threshold is None else args.threshold
+
+    global qs
+    if corpus == "austin_restaurants":
+        qs = austin_questions
 
     items = qs.answered()
     if not items:
@@ -148,11 +156,7 @@ def main():
 def check_out_of_scope(top_k, threshold, corpus, variant):
     """Put every OUT_OF_SCOPE question through retrieval and the gate.
 
-    Criterion 3 in criteria.md is about questions the corpus doesn't cover, and
-    it needs evidence in the run log like the other four. This costs nothing:
-    a question the gate refuses never reaches the model, so there is no API
-    call and no reason to run it three times — retrieval is deterministic and
-    the gate is a comparison against a fixed number.
+
     """
     from store import search
     import gate
