@@ -455,6 +455,8 @@ One of the most valuable uses of AI was troubleshooting the evaluation pipeline.
 
 I also used ChatGPT to investigate retrieval quality. By comparing the original evaluation results with the restaurant dataset, I identified incomplete South Congress recommendations and missing Downtown results. I tested an increase in retrieval depth from five to fifteen chunks and observed an improvement from 15 of 21 manually verified successful trials to 21 of 21 automated passes. I also examined the associated increase in token usage to understand the trade-off between retrieval coverage and operating cost.
 
+#City Guides Original Build
+
 Melissa Hargis - city_guides
 
 ---
