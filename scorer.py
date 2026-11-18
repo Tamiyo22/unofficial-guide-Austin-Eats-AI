@@ -25,7 +25,6 @@
 #     )
 
 
-
 import csv
 import re
 from pathlib import Path
@@ -66,6 +65,19 @@ def mentioned_restaurants(answer, restaurants):
 def judge(question: str, expects: str, answer: str, results) -> bool:
     if not answer or not expects:
         return False
+
+    # Original city_guides questions use factual answer matching.
+    # Austin restaurant questions use the dataset-aware checks below.
+    city_guide_questions = (
+        "marchwood",
+        "limited mobility",
+        "halden bay",
+        "kestrelford",
+        "brightwater",
+    )
+
+    if any(term in question.casefold() for term in city_guide_questions):
+        return expects.strip().casefold() in answer.casefold()
 
     restaurants = load_restaurants()
     mentioned = mentioned_restaurants(answer, restaurants)
