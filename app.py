@@ -18,6 +18,7 @@ import sys
 import time
 
 import config
+from request_logger import log_request
 
 
 def cmd_corpora(args):
@@ -46,7 +47,8 @@ def cmd_index(args):
     chunks = split_documents(documents)
     print(f"  chunked  {describe_chunks(chunks)}")
 
-    print(f"  embedding {len(chunks)} chunks (first run downloads the model)...")
+    print(
+        f"  embedding {len(chunks)} chunks (first run downloads the model)...")
     count = build_index(chunks, corpus=corpus, variant=args.variant)
 
     elapsed = time.time() - started
@@ -87,14 +89,16 @@ def _chunks_at(chunks, spec):
     try:
         positions = [int(piece) for piece in spec.split(",") if piece.strip()]
     except ValueError:
-        raise SystemExit(f"--indices wants whole numbers separated by commas, not '{spec}'")
+        raise SystemExit(
+            f"--indices wants whole numbers separated by commas, not '{spec}'")
 
     picked = []
     for position in positions:
         if 0 <= position < len(chunks):
             picked.append(chunks[position])
         else:
-            print(f"(no chunk at position {position} — this corpus has {len(chunks)})")
+            print(
+                f"(no chunk at position {position} — this corpus has {len(chunks)})")
     return picked
 
 
@@ -183,6 +187,7 @@ def ask_pipeline(
     threshold=None,
     on_gate=None,
     on_prompt=None,
+    cache=True,
 ):
     """Retrieve, gate, answer. Returns the outcome and prints nothing.
 
@@ -231,8 +236,30 @@ def ask_pipeline(
         on_prompt(prompt)
 
     outcome["prompt"] = prompt
-    outcome["answer"] = answer_from_chunks(question, results)
+    outcome["answer"] = answer_from_chunks(
+        question, results, cache=cache
+    )
     outcome["sources"] = sorted({r.source for r in results})
+    return outcome
+
+
+def logged_ask_pipeline(*args, **kwargs):
+    """Run the existing pipeline and log its result or failure."""
+    started = time.perf_counter()
+    question = args[0] if args else kwargs.get("question")
+
+    try:
+        outcome = ask_pipeline(*args, **kwargs)
+    except Exception as exc:
+        log_request(
+            {"question": question, "answer": None, "sources": [],
+             "refused": None, "best_distance": None},
+            time.perf_counter() - started,
+            error=exc,
+        )
+        raise
+
+    log_request(outcome, time.perf_counter() - started)
     return outcome
 
 
@@ -263,7 +290,7 @@ def _ask_one(
         print(prompt)
         print("=" * 70)
 
-    outcome = ask_pipeline(
+    outcome = logged_ask_pipeline(
         question,
         corpus=corpus,
         variant=variant,
@@ -325,7 +352,8 @@ def build_parser():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    parser.add_argument("--corpus", help="corpus folder name (see corpora/README.md)")
+    parser.add_argument(
+        "--corpus", help="corpus folder name (see corpora/README.md)")
     parser.add_argument(
         "--variant",
         default="default",
@@ -334,12 +362,14 @@ def build_parser():
 
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("corpora", help="list available corpora").set_defaults(func=cmd_corpora)
+    sub.add_parser("corpora", help="list available corpora").set_defaults(
+        func=cmd_corpora)
 
     p_index = sub.add_parser("index", help="build the search index")
     p_index.set_defaults(func=cmd_index)
 
-    p_chunks = sub.add_parser("chunks", help="print sample chunks (Milestone 3)")
+    p_chunks = sub.add_parser(
+        "chunks", help="print sample chunks (Milestone 3)")
     p_chunks.add_argument("-n", type=int, default=5, help="how many to print")
     p_chunks.add_argument(
         "--from-doc",
@@ -357,7 +387,8 @@ def build_parser():
     )
     p_chunks.set_defaults(func=cmd_chunks)
 
-    p_ret = sub.add_parser("retrieve", help="show distances only (Milestone 4)")
+    p_ret = sub.add_parser(
+        "retrieve", help="show distances only (Milestone 4)")
     p_ret.add_argument("question")
     p_ret.add_argument("--top-k", type=int)
     p_ret.set_defaults(func=cmd_retrieve)
@@ -365,7 +396,8 @@ def build_parser():
     p_ask = sub.add_parser("ask", help="ask a question")
     p_ask.add_argument("question", nargs="?")
     p_ask.add_argument("--top-k", type=int)
-    p_ask.add_argument("--threshold", type=float, help="override the gate cutoff")
+    p_ask.add_argument("--threshold", type=float,
+                       help="override the gate cutoff")
     p_ask.add_argument(
         "--show-prompt",
         action="store_true",

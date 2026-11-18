@@ -1,8 +1,5 @@
 """
-Stage 5 of the pipeline: writing the answer.
 
-This is the only part of your system that calls out to a service. Everything
-else runs on your laptop.
 
 Every outgoing call in this course goes through `generate()` below. That
 matters for a practical reason: the free tier allows only a small number of
@@ -22,9 +19,7 @@ What this function does for you:
   • Counts your calls, and the tokens they used, so what a run cost is a
     number you can see rather than one you estimate.
 
-⚠️ Caching is ON while you build and OFF during evaluation. Your unit 2
-testing needs three real answers to the same question, not one answer three
-times over.
+
 `run_eval.py` passes cache=False for you.
 """
 

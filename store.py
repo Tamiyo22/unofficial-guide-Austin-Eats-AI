@@ -1,21 +1,4 @@
-"""
-Stages 3 and 4 of the pipeline: embedding chunks and retrieving them.
 
-Three things in here are worth knowing about, because they'd quietly break the
-rest of the project if they were wrong:
-
-1. The Chroma collection is created with cosine distance, explicitly. Chroma
-   defaults to squared L2, and the 0.6 threshold the course uses is calibrated
-   against cosine. Getting this wrong makes every distance number meaningless.
-
-2. `search` returns the distance alongside each chunk. Milestone 4 has you
-   compare distances, so they have to be visible.
-
-3. The embedding model is the one Chroma bundles, not one loaded through
-   `sentence-transformers`. It is the same model — `all-MiniLM-L6-v2`, 384
-   dimensions — but it arrives as an ONNX build from Chroma's own CDN, so the
-   install needs neither PyTorch nor a reachable Hugging Face. See `_embedder`.
-"""
 
 import os
 import shutil
