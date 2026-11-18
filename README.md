@@ -375,7 +375,6 @@ To improve future validation passes, I will implement a more thorough testing st
 
         Changed from minimal to non-existent to stops entirely on Sundays
 
-
 **Why I picked it:**
 
 During testing, a discrepancy was identified regarding the local transit verification dataset. For the test assertion checking if Brightwater's local bus operates on Sundays, the expected target string was updated from "minimal to non-existent" to "stops entirely on Sundays". This adjustment corrects a flawed test metric, ensuring the evaluation criteria accurately reflects the true facts stated within the guide_brightwater.md source document.
@@ -500,12 +499,250 @@ I would write the criterion about answer correctness differently. Initially, I t
 
 ## Capstone
 
-**What This Extends**
+### What This Extends
 
-This capstone extends my existing Unofficial Guide RAG application with restaurant recommendations for Austin, Texas. The new capability will allow users to ask questions about restaurants based on location, cuisine, and budget, using retrieved restaurant information to ground Gemini's responses.
+This capstone extends my existing Unofficial Guide RAG application with restaurant recommendations for Austin, Texas. The new capability allows users to ask questions about restaurants based on location, cuisine, and budget, using retrieved restaurant information to ground Gemini's responses.
 
-**The Shape**
+### The Shape
 
-I selected Shape C: Extend One Capability. I am adding an Austin restaurant recommendation corpus while preserving the existing RAG pipeline.
+I selected Shape C: Extend One Capability. I added an Austin restaurant recommendation corpus while preserving the existing RAG pipeline.
 
 Out of scope for this submission are live restaurant APIs, real-time prices, reservations, maps, and recommendations outside Austin.
+
+### Running It
+
+This project uses Shape C: Extend One Capability and runs locally through the existing Python command-line application. Setup instructions and prerequisites are documented in [RUNNING.md](RUNNING.md).
+
+From the project directory, activate the virtual environment, configure the Gemini API key as described in `RUNNING.md`, and index the `austin_restaurants` corpus if it has not already been indexed.
+
+Then ask a question with:
+
+```cmd
+python app.py --corpus austin_restaurants ask "What restaurants are in South Congress?"
+```
+
+The application retrieves relevant restaurant information, checks the relevance threshold, generates a grounded answer, adds website links when available, and writes a request record to `results/request_log.jsonl`.
+
+The original `city_guides` corpus remains available through the same pipeline.
+
+### Instrumentation
+
+Austin Eats AI records each request in `results/request_log.jsonl` using structured JSON Lines logging. The logger captures successful restaurant recommendations, relevance-gate refusals, and application errors.
+
+Each record contains:
+
+- `timestamp`: UTC timestamp of the completed request.
+- `question`: Original user question.
+- `answer`: Generated response, refusal message, or `null` if processing fails.
+- `sources`: Retrieved document filenames associated with the response.
+- `refused`: Whether the relevance gate rejected the question.
+- `best_distance`: Closest semantic retrieval distance; lower values indicate greater similarity.
+- `duration_seconds`: Total request execution time, measured with `time.perf_counter()`.
+- `error`: Exception message when a request fails; otherwise `null`.
+
+#### Instrumentation Results
+
+Ten distinct questions were submitted to the instrumented application.
+
+| Test category                      | Requests | Result                    |
+| ---------------------------------- | -------: | ------------------------- |
+| Neighborhood recommendations       |        3 | Successful                |
+| Budget-conscious recommendations   |        2 | Successful                |
+| Upscale restaurant recommendations |        1 | Successful                |
+| Pizza recommendations              |        1 | Successful                |
+| Out-of-scope questions             |        3 | Correctly refused         |
+| **Total**                          |   **10** | **No application errors** |
+
+All seven restaurant responses included website links retrieved from the restaurant documents. All three unrelated questions were rejected by the relevance gate rather than answered using unsupported information.
+
+The successful restaurant requests took between **0.666 and 4.068 seconds**. The three refused requests took between **0.654 and 0.785 seconds**.
+
+These results demonstrate that the application can answer several types of restaurant questions, reject unrelated requests, and record its behavior for debugging.
+
+#### Ten Actual Log Entries
+
+The following ten records are preserved in `results/request_log.jsonl` and reproduced below as text.
+
+```json
+{"timestamp": "2026-11-18T02:07:33.881964+00:00", "question": "What restaurants are in South Congress?", "answer": "According to my sources, the restaurants in South Congress are:\n- Toasty Badger\n- June's\n- Home Slice Pizza\n- Two Hands\n- Aba Austin\n\nThis information came from the file **south_congress.md**.\n\nRestaurant websites:\n- [Toasty Badger](https://www.loboshospitality.com/Toasty-Badger.asp)\n- [Home Slice Pizza](https://homeslicepizza.com/location/south-congress/)\n- [Two Hands](https://www.twohandshospitality.com/location/austin/)\n- [June's](http://junesallday.com/)\n- [Aba Austin](https://www.abarestaurants.com/austin/)", "sources": ["east_austin.md", "far_north_austin.md", "north_austin.md", "south_austin.md", "south_congress.md", "south_lamar.md", "southeast_austin.md"], "refused": false, "best_distance": 0.3657461329474946, "duration_seconds": 0.666, "error": null}
+{"timestamp": "2026-11-18T02:07:57.512562+00:00", "question": "Where can I eat in Downtown Austin for under $30?", "answer": "You can eat at the following locations in Downtown Austin for under $30:\n\n* **Anthem**, a lively Tex-Asian pub on Rainey Street with a mid-range price tier of $20ΓÇô$30 (from `downtown.md`).\n* **Taqueria De Diez (D/10)**, located in the Waller Creek District with a budget price tier of $10ΓÇô$20 (from `downtown.md`).\n\nRestaurant websites:\n- [Taqueria De Diez (D/10)](https://taqueriadediez.com/)\n- [Anthem](http://eatdrinkanthem.com/)", "sources": ["central_austin.md", "downtown.md", "east_austin.md", "north_austin.md", "northeast_austin.md", "northwest_austin.md", "south_austin.md"], "refused": false, "best_distance": 0.27567877364744586, "duration_seconds": 4.049, "error": null}
+{"timestamp": "2026-11-18T02:08:10.146972+00:00", "question": "What restaurants are available in East Austin?", "answer": "According to my sources (`east_austin.md`), the restaurants available in East Austin are:\n\n* **Cenote**\n* **Juniper**\n* **Las Trancas Taco Stand**\n\nRestaurant websites:\n- [Las Trancas Taco Stand](https://www.lastrancastacostand.com/menu)\n- [Cenote](https://cenoteaustin.com/)\n- [Juniper](https://www.juniperaustin.com/)", "sources": ["central_austin.md", "east_austin.md", "north_austin.md", "northeast_austin.md", "northwest_austin.md", "south_austin.md", "southeast_austin.md", "west_austin.md"], "refused": false, "best_distance": 0.3029575800399602, "duration_seconds": 3.897, "error": null}
+{"timestamp": "2026-11-18T02:08:19.302061+00:00", "question": "Where can I find affordable food in South Lamar?", "answer": "According to my sources, you can find affordable food in South Lamar at **Thunder Chief**, which is in the budget price tier ($10-$20) and known for crispy wings, birria tacos, and $5 Monday smash burgers (source: `south_lamar.md`).\n\nRestaurant websites:\n- [Thunder Chief](http://thunderchiefatx.com/)", "sources": ["north_austin.md", "south_austin.md", "south_congress.md", "south_lamar.md", "west_austin.md"], "refused": false, "best_distance": 0.3234097600163707, "duration_seconds": 3.446, "error": null}
+{"timestamp": "2026-11-18T02:08:28.875067+00:00", "question": "What restaurants are in North Austin?", "answer": "According to my sources, the restaurants located in North Austin are:\n* The Grill-eria (`north_austin.md`)\n* Conans Pizza (North) (`north_austin.md`)\n* Maudie's North Lamar (`north_austin.md`)\n* Santorini Cafe (`north_austin.md`)\n\nRestaurant websites:\n- [The Grill-eria](https://grill-eria.com/)\n- [Conans Pizza (North)](https://conanspizza.com/)\n- [Santorini Cafe](http://www.santorinicafe-atx.com/)\n- [Maudie's North Lamar](http://maudies.com/)", "sources": ["central_austin.md", "east_austin.md", "far_north_austin.md", "north_austin.md", "northeast_austin.md", "south_austin.md"], "refused": false, "best_distance": 0.2955946919951413, "duration_seconds": 4.068, "error": null}
+{"timestamp": "2026-11-18T02:08:39.216251+00:00", "question": "What upscale restaurants are in Austin?", "answer": "According to my sources, the upscale restaurants in Austin are:\n\n* **District Kitchen + Cocktails** in South Austin (from `south_austin.md`)\n* **Mexican Sugar** in Far North Austin (from `far_north_austin.md`)\n* **Emmer & Rye** Downtown (from `downtown.md`)\n\nRestaurant websites:\n- [Emmer & Rye](http://www.emmerandrye.com/)\n- [Mexican Sugar](https://www.mexicansugarcocina.com/)\n- [District Kitchen + Cocktails](http://districtaustin.com/)", "sources": ["central_austin.md", "downtown.md", "east_austin.md", "far_north_austin.md", "north_austin.md", "northeast_austin.md", "south_austin.md", "southeast_austin.md", "west_austin.md"], "refused": false, "best_distance": 0.31576952219786714, "duration_seconds": 3.49, "error": null}
+{"timestamp": "2026-11-18T02:08:50.640283+00:00", "question": "Where can I get pizza in Austin?", "answer": "You can get pizza at the following locations mentioned in the documents:\n\n* **Conans Pizza (South)** in South Austin (*south_austin.md*)\n* **Little Deli & Pizzeria (Windsor Park)** in Northeast Austin (*northeast_austin.md*)\n* **Conans Pizza (North)** in North Austin (*north_austin.md*)\n* **Little Deli & Pizzeria (Crestview)** in Central Austin (*central_austin.md*)\n* **Home Slice Pizza** in South Congress (*south_congress.md*)\n* **Pour House** in Northwest Austin (*northwest_austin.md*)\n\nRestaurant websites:\n- [Little Deli & Pizzeria (Crestview)](https://www.littledeliandpizza.com/)\n- [Conans Pizza (North)](https://conanspizza.com/)\n- [Little Deli & Pizzeria (Windsor Park)](https://www.littledeliandpizza.com/)\n- [Pour House](http://www.pourhousepintsandpies.com/)\n- [Conans Pizza (South)](https://conanspizza.com/)\n- [Home Slice Pizza](https://homeslicepizza.com/location/south-congress/)", "sources": ["central_austin.md", "east_austin.md", "far_north_austin.md", "north_austin.md", "northeast_austin.md", "northwest_austin.md", "south_austin.md", "south_congress.md"], "refused": false, "best_distance": 0.28067617019919633, "duration_seconds": 3.213, "error": null}
+{"timestamp": "2026-11-18T02:09:05.536066+00:00", "question": "What is the capital of Mongolia?", "answer": "I don't have enough information about that.", "sources": [], "refused": true, "best_distance": 0.8968664962191669, "duration_seconds": 0.654, "error": null}
+{"timestamp": "2026-11-18T02:09:16.079689+00:00", "question": "How do I change the oil in a diesel engine?", "answer": "I don't have enough information about that.", "sources": [], "refused": true, "best_distance": 0.8983973642605366, "duration_seconds": 0.785, "error": null}
+{"timestamp": "2026-11-18T02:09:25.398209+00:00", "question": "How do I write a for loop in Rust?", "answer": "I don't have enough information about that.", "sources": [], "refused": true, "best_distance": 0.8264846775468542, "duration_seconds": 0.679, "error": null}
+```
+
+#### Limitations
+
+The instrumentation records retrieved document filenames but not the exact passages supporting each recommendation. Future improvements could capture passage-level evidence, cache status, and token usage per request to make debugging and cost monitoring more precise.
+
+### What It Costs
+
+I measured token usage using the output from `run_eval.py`, which reports the number of Gemini API calls and total input and output tokens consumed during each evaluation session.
+
+My improved configuration (`top_k=15`) made 21 model calls and consumed 34,605 input tokens and 1,532 output tokens, for a total of 36,137 tokens.
+
+Using an estimated Gemini 3.5 Flash-Lite standard API price of $0.30 per million input tokens and $2.50 per million output tokens:
+
+**Measured evaluation cost estimate:**
+
+- Input: 34,605 × ($0.30 / 1,000,000) = $0.01038
+- Output: 1,532 × ($2.50 / 1,000,000) = $0.00383
+- Total: approximately $0.01421 for 21 requests
+- Average: $0.01421 ÷ 21 = **$0.000677 per request**
+
+**Projected cost for 100 users per day:**
+
+Assuming each user makes one request with similar token usage:
+
+100 × $0.000677 = **$0.0677 per day**, or approximately **$2.03 over 30 days**.
+
+The original `top_k=5` configuration consumed 14,162 tokens across 21 requests. Increasing retrieval depth to 15 improved recommendation coverage but raised token consumption by approximately 155%.
+
+These estimates cover Gemini inference only, not infrastructure, hosting, or other operational expenses. Actual costs would vary with query complexity, response length, caching, and API pricing. The evaluation was run with caching disabled.
+
+### Run Log and Verdicts
+
+I evaluated Austin Eats AI using seven restaurant questions, each repeated three times, for 21 trials per configuration.
+
+The original evaluation used `top_k=5`. The improvement increased retrieval depth to `top_k=15`, while keeping the relevance cutoff at `0.65`.
+
+| Evaluation question                                     | Before (3 trials) | After (3 trials) |
+| ------------------------------------------------------- | ----------------- | ---------------- |
+| List all five South Congress restaurants                | 0/3               | 3/3              |
+| Recommend North Austin restaurants                      | 3/3               | 3/3              |
+| Find South Congress restaurants costing $20 or less     | 3/3               | 3/3              |
+| Recommend Downtown restaurants under $30                | 0/3               | 3/3              |
+| Recommend casual East Austin restaurants                | 3/3               | 3/3              |
+| Find fine-dining West Austin restaurants                | 3/3               | 3/3              |
+| Refuse unsupported moon-rock restaurant recommendations | 3/3               | 3/3              |
+| **Total**                                               | **15/21 (71.4%)** | **21/21 (100%)** |
+
+**Scoring note:** The original baseline report recorded all 21 trials as failures because the initial scorer required exact expectation phrases to appear in the answers. I subsequently corrected the scoring logic. The before results above are a manual reassessment of the saved responses; the after results were generated with the corrected scorer. The original baseline report remains unchanged.
+
+**Out-of-scope safety:** All five unrelated questions were refused by the relevance gate in both configurations.
+
+**Evidence files:**
+
+- `results/run_2026-11-17_1856_before.md`
+- `results/run_2026-11-17_1913_retrieval_test.md`
+
+**Example improvement:** Before the change, the system listed four South Congress restaurants, omitting Aba Austin. After increasing retrieval depth, all five restaurants appeared in all three trials. The Downtown question also improved from an unsupported refusal to recommendations for Taqueria De Diez (D/10) and Anthem.
+
+**Cost trade-off:** The baseline used 14,162 tokens across 21 calls, compared with 36,137 tokens after expanding retrieval. This is approximately a 155% increase in token usage in exchange for improved coverage.
+
+### Acceptance Criteria — Before and After
+
+The following results use the five acceptance criteria defined in `criteria.md` before testing began.
+
+**Before improvement — top-k = 5**
+
+| Criterion                                          | Target                        | Run 1      | Run 2      | Run 3      | Verdict      |
+| -------------------------------------------------- | ----------------------------- | ---------- | ---------- | ---------- | ------------ |
+| 1. Recommendations match the requested Austin area | 100% location accuracy        | 3/3        | 3/3        | 3/3        | MET\*        |
+| 2. Recommendations respect maximum budget          | 100% budget compliance        | 1/2        | 1/2        | 1/2        | NOT MET      |
+| 3. No invented or unsupported information          | 100% grounded refusals        | Pass       | Pass       | Pass       | MET          |
+| 4. Original city_guides functionality works        | 3 accurate original questions | Not tested | Not tested | Not tested | NOT VERIFIED |
+| 5. Recommendations match dining price category     | 100% category accuracy        | 2/2        | 2/2        | 2/2        | MET          |
+
+_The original South Congress answer omitted one restaurant but did not recommend restaurants outside the requested area. The Downtown query returned no recommendations, so it did not demonstrate successful retrieval despite avoiding incorrect locations._
+
+**After improvement — top-k = 15**
+
+| Criterion                                          | Target                        | Run 1 | Run 2 | Run 3 | Verdict |
+| -------------------------------------------------- | ----------------------------- | ----- | ----- | ----- | ------- |
+| 1. Recommendations match the requested Austin area | 100% location accuracy        | 3/3   | 3/3   | 3/3   | MET     |
+| 2. Recommendations respect maximum budget          | 100% budget compliance        | 2/2   | 2/2   | 2/2   | MET     |
+| 3. No invented or unsupported information          | 100% grounded refusals        | Pass  | Pass  | Pass  | MET     |
+| 4. Original city_guides functionality works        | 3 accurate original questions | 3/3   | 3/3   | 3/3   | MET\*\* |
+| 5. Recommendations match dining price category     | 100% category accuracy        | 2/2   | 2/2   | 2/2   | MET     |
+
+**Compatibility note:** The original city guide compatibility test produced 15 correct, source-grounded answers across five questions and three trials. The automated scorer initially marked them as failures because it only recognized Austin restaurant questions. Manual inspection verified the correct answers, and the scorer was subsequently updated to recognize the original city guide expectations.
+
+**Evaluation limitations:** The original restaurant baseline was manually reassessed after identifying an overly strict scorer. The budget criterion treats an unanswered query as a failure because the system did not provide a useful qualifying recommendation. The automated restaurant scorer checks known restaurant names and dataset categories but is not a comprehensive hallucination detector.
+
+**Supporting reports:**
+
+- `results/run_2026-11-17_1856_before.md`
+- `results/run_2026-11-17_1913_retrieval_test.md`
+- `results/run_2026-11-17_1923_compatibility_after.md`
+
+### The Improvement
+
+#### What Changed and Why
+
+The initial evaluation revealed that the RAG system sometimes failed to retrieve enough relevant restaurant information. With `TOP_K = 5`, the system omitted Aba Austin from its South Congress recommendations and could not provide an adequate answer to the Downtown Austin under-$30 question.
+
+To address this, I increased `TOP_K` from **5 to 15** in `config.py`. This allowed Chroma to retrieve more potentially relevant document chunks before passing them to Gemini.
+
+I chose this change because the missing information already existed in the restaurant corpus. The problem was primarily retrieval coverage rather than missing data.
+
+#### Second Evaluation
+
+I ran the same seven Austin restaurant questions across three trials after increasing `TOP_K`.
+
+| Measurement                            | Before (`top_k=5`) | After (`top_k=15`)                          |
+| -------------------------------------- | ------------------ | ------------------------------------------- |
+| Restaurant evaluation trials           | 21                 | 21                                          |
+| Manually reviewed successful trials    | 15/21              | 21/21                                       |
+| Correct South Congress recommendations | Incomplete         | All five restaurants included               |
+| Downtown under-$30 recommendations     | Missing            | Anthem and Taqueria De Diez (D/10) returned |
+| Out-of-scope refusal checks            | 5/5                | 5/5                                         |
+| Total measured tokens                  | 14,162             | 36,137                                      |
+
+The improvement increased manually reviewed success from approximately **71% to 100%** on this evaluation set.
+
+The trade-off was higher token usage: approximately **2.55 times** the original total. This is acceptable for the small prototype but would require optimization at larger scale.
+
+**Evaluation evidence:**
+
+- Before: `results/run_2026-11-17_1856_before.md`
+- After: `results/run_2026-11-17_1913_retrieval_test.md`
+
+The original evaluation scorer also had an overly strict exact-string comparison that incorrectly marked otherwise correct answers as failures. I investigated those results manually and improved the scorer rather than treating its initial failure counts as evidence that every answer was incorrect.
+
+#### Additional Usability Improvement: Restaurant Website Links
+
+After improving retrieval, I added restaurant website links to the generated recommendations.
+
+The new `restaurant_links.py` helper reads website URLs from the existing restaurant Markdown documents and matches them to restaurant names mentioned in the generated answer.
+
+This approach avoids asking Gemini to invent URLs and does not require an additional model call.
+
+I also changed the response wording from "Based on the provided documents" to "According to my sources" to make the assistant sound more natural.
+
+A separate ten-request instrumentation run tested seven distinct restaurant questions and three unrelated questions. All seven restaurant responses included website links, all three unrelated questions were refused, and no application errors were recorded.
+
+#### Remaining Trade-Off
+
+Increasing retrieval depth improved coverage but also increased the amount of context sent to Gemini. The next improvement would be neighborhood-aware retrieval filtering, allowing the system to retrieve fewer, more targeted chunks while preserving recommendation accuracy.
+
+### What's Still Broken
+
+Although Austin Eats AI passed all 21 trials in the final restaurant evaluation, the system still has limitations.
+
+The most significant limitation is retrieval efficiency. Increasing `top_k` from 5 to 15 improved recommendation coverage, but it also increased token consumption by approximately 155%. The system retrieves semantically similar chunks without explicitly filtering by neighborhood, meaning it may include unrelated restaurant information in the context sent to Gemini.
+
+The evaluation system also has room for improvement. While the updated scorer validates restaurant names against the dataset and checks location, budget, and dining categories, it does not detect every possible unsupported claim. Additionally, the current evaluation uses a relatively small set of seven restaurant questions.
+
+If I revised my acceptance criteria, I would strengthen Criterion 3 by requiring every factual claim in a recommendation—not just restaurant names—to be supported by the retrieved documents. I would also expand testing to include misspelled neighborhood names, conflicting constraints, and requests for unavailable dining categories.
+
+I stopped further development because the project met its current evaluation targets, and implementing more sophisticated retrieval and claim validation would require additional development and testing.
+
+### What I'd Do Next
+
+If I had another unit to continue developing Austin Eats AI, I would prioritize neighborhood-aware retrieval that filters restaurant documents by the user's requested location before sending them to Gemini. This could maintain the recommendation accuracy achieved with `top_k=15` while reducing irrelevant context, token consumption, and operating costs.
+
+### How I Used AI
+
+# One
+
+One of the most valuable uses of AI was troubleshooting the evaluation pipeline. When my initial tests reported that every restaurant recommendation had failed, I worked with ChatGPT to investigate the discrepancy between the automated verdicts and the actual generated answers. We identified that the original scorer relied on overly restrictive string matching rather than validating restaurant recommendations against the dataset. I used AI assistance to develop a more appropriate scoring approach, tested the revised functions, and verified the results against saved evaluation logs.
+
+# Two
+
+I also used ChatGPT to investigate retrieval quality. By comparing the original evaluation results with the restaurant dataset, I identified incomplete South Congress recommendations and missing Downtown results. I tested an increase in retrieval depth from five to fifteen chunks and observed an improvement from 15 of 21 manually verified successful trials to 21 of 21 automated passes. I also examined the associated increase in token usage to understand the trade-off between retrieval coverage and operating cost.

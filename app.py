@@ -236,10 +236,26 @@ def ask_pipeline(
         on_prompt(prompt)
 
     outcome["prompt"] = prompt
+
     outcome["answer"] = answer_from_chunks(
         question, results, cache=cache
     )
+
+# Use friendlier wording.
+    outcome["answer"] = outcome["answer"].replace(
+        "Based on the provided documents",
+        "According to my sources"
+    )
+
     outcome["sources"] = sorted({r.source for r in results})
+
+# Attach verified restaurant website links.
+    if (corpus or config.CORPUS) == "austin_restaurants":
+        from restaurant_links import add_restaurant_links
+        outcome["answer"] = add_restaurant_links(
+            outcome["answer"], outcome["sources"]
+        )
+
     return outcome
 
 
